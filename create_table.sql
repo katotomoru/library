@@ -1,0 +1,1 @@
+create table liber_oya(BibliographyType,ISBN,Identifier,Author,Title,Journal,Volume,Number,Month,Pages,Year,Address,Note,URL,Booktitle,Chapter,Edition,Series,Editor,Publisher,ReportType,Howpublished,Institution,Organizations,School,Annote,Custom1,Custom2,Custom3,Custom4,Custom5);
