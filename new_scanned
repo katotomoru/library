@@ -1,0 +1,17 @@
+import os, re
+os.chdir("C:\сканирование\готово")
+mypath = r"C:\сканирование\готово"
+
+f = open(u'Готово.txt', 'r', encoding='utf-8-sig')
+scanned = f.readlines()
+f.close()
+
+new_scanned = []
+
+for i in os.listdir(mypath):
+    if re.match("^\d", i) and i not in scanned:
+        #folder_scanned.append(i)
+        new_scanned.append(i)
+        print (i)
+
+print (len(scanned), len(new_scanned))
