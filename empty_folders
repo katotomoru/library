@@ -1,0 +1,24 @@
+# -*- coding: utf-8 -*-
+import os, re
+books = []
+os.chdir(r"C:\Users\linguist\Desktop")
+with open(u'000 Сканированные книги.txt', 'r', encoding='utf-8-sig') as textfile:
+    for line in textfile:
+        b = (str(line.strip()))
+        books.append(str(b))
+print (len(books))
+
+path = u"C:\Сканирование"
+empty = []
+with os.scandir(path) as it:
+    for entry in it:
+        if entry.name in books:
+            new_path = str(u'C:\Сканирование\\' + entry.name)
+            print (new_path)
+            if len(os.listdir(new_path)) == 0:
+                empty.append(new_path)
+
+
+with open('empty_scanned_folders.txt', 'w', encoding='utf8') as f2:
+    for i in empty:
+        f2.write(i + '\n')
