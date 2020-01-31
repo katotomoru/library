@@ -1,0 +1,31 @@
+import os, re, time, datetime, sys
+from datetime import date
+os.chdir("C:\сканирование")
+mypath = r"C:\сканирование"
+
+months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+months_order = dict(zip(months, list(range(1, 13))))
+
+#datetime1 = date.today()
+datetime1 = datetime.date(2020, 1, 23) #last update of the database
+
+
+#now_date = re.compile(r'(^\d{4})\-0?(\d|\d{2})-0?(\d{2}|\d)')
+#datetime1 = re.match(now_date, datetime1). group(1,2,3)
+#print ('-'.join(datetime1))
+
+folder_date = re.compile(r'(^[a-z]{3}\s)([a-z]{3})\s\s?(\d+)\s(\d{2}\:?){3}\s(\d{4})', flags=re.IGNORECASE)
+n = 0
+for i in os.listdir(mypath):
+    year = int(re.match(folder_date, time.ctime(os.path.getmtime(i)).strip()).group(5))
+    month = int(months_order.get(re.match(folder_date, time.ctime(os.path.getmtime(i)).strip()).group(2)))
+    date = int(re.match(folder_date, time.ctime(os.path.getmtime(i)).strip()).group(3))
+    datetime2 = datetime.date(year, month, date)
+    if datetime2 > datetime1:
+        n += 1
+        print (i, datetime2)
+
+if n == 0:
+    print ('No new books scanned.')
+else:
+    print ('Please add new books.')
