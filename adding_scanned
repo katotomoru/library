@@ -1,44 +1,89 @@
-# -*- coding: utf-8 -*-
-import bibtexparser, os, re, time, sys
-start_time = time.time()
+import os, re, time, datetime, sys, bibtexparser
+from bibtexparser.bwriter import BibTexWriter
+from bibtexparser.bibdatabase import BibDatabase
+from datetime import date
 
-os.chdir(r"C:\Users\linguist\Desktop")
+os.chdir("C:\сканирование")
+mypath = r"C:\сканирование"
+
+months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+months_order = dict(zip(months, list(range(1, 13))))
+
+# datetime1 = date.today()
+datetime1 = datetime.date(2020, 1, 23)  # last update of the database
+
+# now_date = re.compile(r'(^\d{4})\-0?(\d|\d{2})-0?(\d{2}|\d)')
+# datetime1 = re.match(now_date, datetime1). group(1,2,3)
+# print ('-'.join(datetime1))
+
+folder_date = re.compile(r'(^[a-z]{3}\s)([a-z]{3})\s\s?(\d+)\s(\d{2}\:?){3}\s(\d{4})', flags=re.IGNORECASE)
+n = []
+for i in os.listdir(mypath):
+    year = int(re.match(folder_date, time.ctime(os.path.getmtime(i)).strip()).group(5))
+    month = int(months_order.get(re.match(folder_date, time.ctime(os.path.getmtime(i)).strip()).group(2)))
+    date = int(re.match(folder_date, time.ctime(os.path.getmtime(i)).strip()).group(3))
+    datetime2 = datetime.date(year, month, date)
+    if datetime2 > datetime1 and i != 'Готово':
+        n.append(i)
+        print(i, '\tAdded on ', datetime2)
+
+if len(n) == 0:
+    print('No new books scanned.')
+    sys.exit()
+
 books = []
 year = re.compile(r'\.\d{4}$')
 
-with open(u'000 Сканированные книги.txt', 'r', encoding='utf-8-sig') as textfile:
-    for line in textfile:
-        entry = {}
-        ind = re.match(u'A?\d+\-?\w?', line.strip())
-        if line.strip().endswith(u'.pdf'):
-            line = line.strip()[:-4]
-        if line.strip().split('.')[0].isdigit():
-            line = ' '.join(line.strip().split('. ')[1:]) #delete index
-        if ' - ' in line:
-            entry['author'] = line.strip().split(' - ')[0]
-            line = ''.join(line.strip().split(' - ')[1:])
-        if year.search(line.strip()) != None:
-            entry['year'] = str(year.search(line.strip()).group(0))[1:]
-            line = ''.join(line.strip()[:-5])
-        entry['title'] = ''.join((line.strip()))
-            #if (x for x in entry.get('title').split() if x[0].isupper())
-        entry['scanned'] = 'Y'
-        entry['ENTRYTYPE'] = 'book'
+for book in n:
+    entry = {}
+    ind = re.match(u'A?\d+\-?\w?', book.strip())
+    if book.strip().endswith(u'.pdf'):
+        book = book.strip()[:-4]
+    if book.strip().split('.')[0].isdigit():
+        book = ' '.join(book.strip().split('. ')[1:])  # delete index
+    if ' - ' in book:
+        entry['author'] = book.strip().split(' - ')[0]
+        book = ''.join(book.strip().split(' - ')[1:])
+    if year.search(book.strip()) is not None:
+        entry['year'] = str(year.search(book.strip()).group(0))[1:]
+        book = ''.join(book.strip()[:-5])
+    entry['title'] = ''.join((book.strip()))
+    entry['scanned'] = 'Y'
+    entry['ENTRYTYPE'] = 'book'
+    if ind != None:
         entry['ID'] = str(u'оя-' + str(ind.group()))
-        books.append(entry)
-        print (entry)
-print ('ready ', len(books))
-#sys.exit()
-print (time.time() - start_time)
+    else:
+        entry['ID'] = 'None'
+    books.append(entry)
+    print(entry)
 
-with open('shared.bib', encoding="utf8") as file:
+os.chdir(r"C:\Users\linguist\Desktop")
+
+db = BibDatabase()
+db.entries = [
+    {'ENTRYTYPE': '',
+     'pages': '',
+     'title': '',
+     'year': '',
+     'scanned': '',
+     'ID': '',
+     'author' :''}]
+
+writer = BibTexWriter()
+with open('bibtex.bib', 'w') as bibfile:
+    bibfile.write(writer.write(db))
+
+with open('bibtex.bib', encoding="utf8") as file:
     bib_db = bibtexparser.load(file)
-print ('len of bib ', len(bib_db.entries))
 
 for b in books:
     bib_db.entries.append(b)
 
 print ('new len of bib ', len(bib_db.entries))
 
-with open('new_oya_lib.bib', 'w', encoding='utf8') as f2:
+with open('new_lib.bib', 'w', encoding='utf8') as f2:
    bibtexparser.dump(bib_db, f2)
+
+os.remove('bibtex.bib')
+
+print ('Export new_lib.bib file to the shared library!')
