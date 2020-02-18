@@ -2,36 +2,55 @@ import os, re, time, datetime, sys, bibtexparser
 from bibtexparser.bwriter import BibTexWriter
 from bibtexparser.bibdatabase import BibDatabase
 
-os.chdir("C:\сканирование")
-mypath = r"C:\сканирование"
+def get_new_books(path):
+    global newscanned
+    for i in os.listdir(path):
+        ipath = os.path.join(path, i)
+        year = int(re.match(folder_date, time.ctime(os.path.getmtime(ipath)).strip()).group(5))
+        month = int(months_order.get(re.match(folder_date, time.ctime(os.path.getmtime(ipath)).strip()).group(2)))
+        date = int(re.match(folder_date, time.ctime(os.path.getmtime(ipath)).strip()).group(3))
+        datetime2 = datetime.date(year, month, date)
+        if datetime2 > datetime1 and i != 'Готово':
+            newscanned.append(i)
+            print(i, '\tAdded on ', datetime2)
+    return newscanned
+
+def get_folders(path):
+    for book in os.listdir(path):
+        bookpath = os.path.join(path, book)
+        if os.path.isdir(bookpath):
+            get_new_books(bookpath)
+        else:
+            print('not path ', book)
+            continue
+
+
+os.chdir(r"C:\сканирование\готово")
+mypath = r"C:\сканирование\готово"
 
 months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 months_order = dict(zip(months, list(range(1, 13))))
 
-datetime1 = datetime.date(2020, 1, 23)  # last update of the database
-
+datetime1 = datetime.date(2020, 2, 7)  # last update of the database
+print ('Последние книги были добавлены в базу ', datetime1)
 
 folder_date = re.compile(r'(^[a-z]{3}\s)([a-z]{3})\s\s?(\d+)\s(\d{2}\:?){3}\s(\d{4})', flags=re.IGNORECASE)
-n = []
-for i in os.listdir(mypath):
-    year = int(re.match(folder_date, time.ctime(os.path.getmtime(i)).strip()).group(5))
-    month = int(months_order.get(re.match(folder_date, time.ctime(os.path.getmtime(i)).strip()).group(2)))
-    date = int(re.match(folder_date, time.ctime(os.path.getmtime(i)).strip()).group(3))
-    datetime2 = datetime.date(year, month, date)
-    if datetime2 > datetime1 and i != 'Готово':
-        n.append(i)
-        print(i, '\tAdded on ', datetime2)
+newscanned = []
 
-if len(n) == 0:
+done_folders = get_folders(mypath)
+
+if len(newscanned) == 0:
     print('No new books scanned.')
     sys.exit()
 
 books = []
 year = re.compile(r'\.\d{4}$')
 
-for book in n:
+for book in newscanned:
     entry = {}
+    print (book.strip())
     ind = re.match(u'A?\d+\-?\w?', book.strip())
+    auth = re.match(u'^(\d{4})?\.\s(\w+)\s\w\.',book.strip(),flags=re.IGNORECASE)
     if book.strip().endswith(u'.pdf'):
         book = book.strip()[:-4]
     if book.strip().split('.')[0].isdigit():
@@ -39,6 +58,8 @@ for book in n:
     if ' - ' in book:
         entry['author'] = book.strip().split(' - ')[0]
         book = ''.join(book.strip().split(' - ')[1:])
+    elif ' - ' not in book and auth != None:
+        entry['author'] = auth.group(2)
     if year.search(book.strip()) is not None:
         entry['year'] = str(year.search(book.strip()).group(0))[1:]
         book = ''.join(book.strip()[:-5])
@@ -50,7 +71,7 @@ for book in n:
     else:
         entry['ID'] = 'None'
     books.append(entry)
-    print(entry)
+    #print(entry)
 
 os.chdir(r"C:\Users\linguist\Desktop")
 
@@ -81,4 +102,4 @@ with open('new_lib.bib', 'w', encoding='utf8') as f2:
 
 os.remove('bibtex.bib')
 
-print ('Export new_lib.bib file to the shared library!')
+print ('\nExport new_lib.bib file to the shared library!')
